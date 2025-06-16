@@ -246,14 +246,17 @@ const showCopyFeedback = (index) => {
 function filterByGeneration(generation) {
     currentGeneration = generation;
     
-    // アクティブボタンの更新
+    // アクティブボタンの更新（改行要素をスキップ）
     const buttons = document.querySelectorAll('#generation-buttons button');
-    buttons.forEach((button, index) => {
-        if (index === generation) {
+    let buttonIndex = 0;
+    buttons.forEach(button => {
+        const genNumber = buttonIndex === 0 ? 0 : buttonIndex;
+        if (genNumber === generation) {
             button.classList.add('active');
         } else {
             button.classList.remove('active');
         }
+        buttonIndex++;
     });
     
     // ポケモンを再生成
