@@ -17,6 +17,20 @@ const CONFIG = {
 
 // グローバル変数
 let pokemonList = [{ id: 25, name: "ピカチュウ" }];
+let currentGeneration = 0;  // 0 = 全て, 1-9 = 各世代
+
+// 世代ごとのポケモンID範囲
+const GENERATION_RANGES = {
+    1: { start: 1, end: 151 },      // カントー
+    2: { start: 152, end: 251 },    // ジョウト
+    3: { start: 252, end: 386 },    // ホウエン
+    4: { start: 387, end: 493 },    // シンオウ
+    5: { start: 494, end: 649 },    // イッシュ
+    6: { start: 650, end: 721 },    // カロス
+    7: { start: 722, end: 809 },    // アローラ
+    8: { start: 810, end: 905 },    // ガラル
+    9: { start: 906, end: 1025 }    // パルデア
+};
 
 // ローディング表示
 const showLoading = () => {
@@ -72,16 +86,35 @@ if (document.readyState === 'loading') {
     init();
 }
 
+// 世代でフィルタリングされたポケモンリストを取得
+const getFilteredPokemonList = () => {
+    if (currentGeneration === 0) {
+        return pokemonList;
+    }
+    
+    const range = GENERATION_RANGES[currentGeneration];
+    return pokemonList.filter(pokemon => 
+        pokemon.id >= range.start && pokemon.id <= range.end
+    );
+};
+
 // ランダムなポケモンを選択する
 const selectRandomPokemon = (count) => {
+    const filteredList = getFilteredPokemonList();
+    
+    // フィルタリング後のポケモン数が要求数より少ない場合
+    if (filteredList.length <= count) {
+        return filteredList.slice();
+    }
+    
     const selectedPokemon = [];
     const usedIndices = new Set();
     
     while (selectedPokemon.length < count) {
-        const randomIndex = Math.floor(Math.random() * pokemonList.length);
+        const randomIndex = Math.floor(Math.random() * filteredList.length);
         if (!usedIndices.has(randomIndex)) {
             usedIndices.add(randomIndex);
-            selectedPokemon.push(pokemonList[randomIndex]);
+            selectedPokemon.push(filteredList[randomIndex]);
         }
     }
     
@@ -208,6 +241,24 @@ const showCopyFeedback = (index) => {
         feedback.style.display = 'none';
     }, CONFIG.FEEDBACK_DURATION);
 };
+
+// 世代フィルターボタンのクリック処理
+function filterByGeneration(generation) {
+    currentGeneration = generation;
+    
+    // アクティブボタンの更新
+    const buttons = document.querySelectorAll('#generation-buttons button');
+    buttons.forEach((button, index) => {
+        if (index === generation) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
+    
+    // ポケモンを再生成
+    generateMultiplePokemon();
+}
 
 // LGTMテキストを追加した画像を生成
 const createLGTMImage = async (originalCanvas) => {

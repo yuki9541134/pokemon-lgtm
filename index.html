@@ -26,6 +26,32 @@
             text-align: center;
             margin: 30px 0;
         }
+        .generation-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .generation-buttons button {
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .generation-buttons button:hover {
+            background-color: #d0d0d0;
+        }
+        .generation-buttons button.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #45a049;
+        }
+        .generation-buttons button.active:hover {
+            background-color: #45a049;
+        }
         button {
             background-color: #4CAF50;
             color: white;
@@ -106,6 +132,18 @@
     <div class="container">
         <h1>ポケモンLGTMジェネレーター</h1>
         <div class="button-container">
+            <div class="generation-buttons" id="generation-buttons">
+                <button onclick="filterByGeneration(0)" class="active">全て</button>
+                <button onclick="filterByGeneration(1)">第1世代</button>
+                <button onclick="filterByGeneration(2)">第2世代</button>
+                <button onclick="filterByGeneration(3)">第3世代</button>
+                <button onclick="filterByGeneration(4)">第4世代</button>
+                <button onclick="filterByGeneration(5)">第5世代</button>
+                <button onclick="filterByGeneration(6)">第6世代</button>
+                <button onclick="filterByGeneration(7)">第7世代</button>
+                <button onclick="filterByGeneration(8)">第8世代</button>
+                <button onclick="filterByGeneration(9)">第9世代</button>
+            </div>
             <button onclick="generateMultiplePokemon()">ポケモンを変更する</button>
         </div>
         <div id="pokemon-grid"></div>
