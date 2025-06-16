@@ -91,8 +91,8 @@ const selectRandomPokemon = (count) => {
 // ポケモンカードのHTMLを作成
 const createPokemonCardHTML = (pokemon, index) => {
     return `
-        <canvas id="canvas-${index}" width="${CONFIG.CANVAS_SIZE}" height="${CONFIG.CANVAS_SIZE}"></canvas>
-        <div class="pokemon-name">No.${pokemon.id} ${pokemon.name}</div>
+        <canvas id="canvas-${index}" width="${CONFIG.CANVAS_SIZE}" height="${CONFIG.CANVAS_SIZE}"
+                data-pokemon-id="${pokemon.id}" data-pokemon-name="${pokemon.name}"></canvas>
         <button onclick="copyPokemonImage(${index})">画像をコピー</button>
         <div class="copy-feedback" id="feedback-${index}">コピーしました！</div>
     `;
@@ -168,8 +168,13 @@ const drawPokemonImage = (pokemon, canvasId) => {
         
         ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
         
-        // 画像データを保存（コピー時に使用）
-        canvas.dataset.pokemonId = pokemon.id;
+        // 図鑑番号と名前を追加
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#333';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const infoText = `No.${pokemon.id} ${pokemon.name}`;
+        ctx.fillText(infoText, canvas.width / 2, canvas.height - 5);
     };
     
     let retryCount = 0;
@@ -206,6 +211,10 @@ const showCopyFeedback = (index) => {
 
 // LGTMテキストを追加した画像を生成
 const createLGTMImage = async (originalCanvas) => {
+    // ポケモン情報を取得
+    const pokemonId = originalCanvas.dataset.pokemonId;
+    const pokemonName = originalCanvas.dataset.pokemonName;
+    
     // 新しいキャンバスを作成（サイズを2倍に）
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = originalCanvas.width * 2;
@@ -215,6 +224,10 @@ const createLGTMImage = async (originalCanvas) => {
     // スケーリングの品質を向上
     tempCtx.imageSmoothingEnabled = true;
     tempCtx.imageSmoothingQuality = 'high';
+    
+    // 背景を白で塗りつぶす（図鑑番号・名前の背景が透過しないように）
+    tempCtx.fillStyle = 'white';
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
     
     // 元の画像を2倍サイズでコピー
     tempCtx.drawImage(originalCanvas, 0, 0, originalCanvas.width, originalCanvas.height, 
@@ -233,6 +246,14 @@ const createLGTMImage = async (originalCanvas) => {
     
     tempCtx.strokeText(CONFIG.LGTM_TEXT, textX, textY);
     tempCtx.fillText(CONFIG.LGTM_TEXT, textX, textY);
+    
+    // 図鑑番号と名前を追加（2倍サイズに調整）
+    tempCtx.font = '24px Arial';  // 12px → 24px
+    tempCtx.fillStyle = '#333';
+    tempCtx.textAlign = 'center';
+    tempCtx.textBaseline = 'bottom';
+    const infoText = `No.${pokemonId} ${pokemonName}`;
+    tempCtx.fillText(infoText, tempCanvas.width / 2, tempCanvas.height - 10);
     
     return tempCanvas;
 };
