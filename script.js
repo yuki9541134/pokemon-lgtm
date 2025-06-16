@@ -206,20 +206,25 @@ const showCopyFeedback = (index) => {
 
 // LGTMテキストを追加した画像を生成
 const createLGTMImage = async (originalCanvas) => {
-    // 新しいキャンバスを作成
+    // 新しいキャンバスを作成（サイズを2倍に）
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = originalCanvas.width;
-    tempCanvas.height = originalCanvas.height;
+    tempCanvas.width = originalCanvas.width * 2;
+    tempCanvas.height = originalCanvas.height * 2;
     const tempCtx = tempCanvas.getContext('2d');
     
-    // 元の画像をコピー
-    tempCtx.drawImage(originalCanvas, 0, 0);
+    // スケーリングの品質を向上
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
     
-    // LGTMテキストを追加
-    tempCtx.font = CONFIG.LGTM_FONT;
+    // 元の画像を2倍サイズでコピー
+    tempCtx.drawImage(originalCanvas, 0, 0, originalCanvas.width, originalCanvas.height, 
+                      0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // LGTMテキストを追加（サイズも2倍に調整）
+    tempCtx.font = 'bold 60px Arial';  // 30px → 60px
     tempCtx.fillStyle = CONFIG.LGTM_FILL_COLOR;
     tempCtx.strokeStyle = CONFIG.LGTM_STROKE_COLOR;
-    tempCtx.lineWidth = CONFIG.LGTM_LINE_WIDTH;
+    tempCtx.lineWidth = CONFIG.LGTM_LINE_WIDTH * 2;  // 線幅も2倍
     tempCtx.textAlign = 'center';
     tempCtx.textBaseline = 'middle';
     
