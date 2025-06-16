@@ -138,7 +138,7 @@ const loadImagesInBatches = (pokemonList) => {
     loadNextBatch();
 };
 
-// キャンバスにポケモン画像とLGTMテキストを描画
+// キャンバスにポケモン画像を描画（LGTMなし）
 const drawPokemonImage = (pokemon, canvasId) => {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -168,19 +168,8 @@ const drawPokemonImage = (pokemon, canvasId) => {
         
         ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
         
-        // LGTMテキストを描画
-        ctx.font = CONFIG.LGTM_FONT;
-        ctx.fillStyle = CONFIG.LGTM_FILL_COLOR;
-        ctx.strokeStyle = CONFIG.LGTM_STROKE_COLOR;
-        ctx.lineWidth = CONFIG.LGTM_LINE_WIDTH;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const textX = canvas.width / 2;
-        const textY = canvas.height / 2;
-        
-        ctx.strokeText(CONFIG.LGTM_TEXT, textX, textY);
-        ctx.fillText(CONFIG.LGTM_TEXT, textX, textY);
+        // 画像データを保存（コピー時に使用）
+        canvas.dataset.pokemonId = pokemon.id;
     };
     
     let retryCount = 0;
@@ -215,12 +204,44 @@ const showCopyFeedback = (index) => {
     }, CONFIG.FEEDBACK_DURATION);
 };
 
+// LGTMテキストを追加した画像を生成
+const createLGTMImage = async (originalCanvas) => {
+    // 新しいキャンバスを作成
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = originalCanvas.width;
+    tempCanvas.height = originalCanvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // 元の画像をコピー
+    tempCtx.drawImage(originalCanvas, 0, 0);
+    
+    // LGTMテキストを追加
+    tempCtx.font = CONFIG.LGTM_FONT;
+    tempCtx.fillStyle = CONFIG.LGTM_FILL_COLOR;
+    tempCtx.strokeStyle = CONFIG.LGTM_STROKE_COLOR;
+    tempCtx.lineWidth = CONFIG.LGTM_LINE_WIDTH;
+    tempCtx.textAlign = 'center';
+    tempCtx.textBaseline = 'middle';
+    
+    const textX = tempCanvas.width / 2;
+    const textY = tempCanvas.height / 2;
+    
+    tempCtx.strokeText(CONFIG.LGTM_TEXT, textX, textY);
+    tempCtx.fillText(CONFIG.LGTM_TEXT, textX, textY);
+    
+    return tempCanvas;
+};
+
 // ポケモン画像をクリップボードにコピー
 const copyPokemonImage = async (index) => {
-    const canvas = document.getElementById(`canvas-${index}`);
+    const originalCanvas = document.getElementById(`canvas-${index}`);
     
     try {
-        const blob = await new Promise(resolve => canvas.toBlob(resolve));
+        // LGTM付きの画像を生成
+        const lgtmCanvas = await createLGTMImage(originalCanvas);
+        
+        // Blobに変換してクリップボードにコピー
+        const blob = await new Promise(resolve => lgtmCanvas.toBlob(resolve));
         const item = new ClipboardItem({ 'image/png': blob });
         await navigator.clipboard.write([item]);
         showCopyFeedback(index);
