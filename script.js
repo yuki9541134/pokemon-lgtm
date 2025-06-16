@@ -10,39 +10,67 @@ const CONFIG = {
     LGTM_FILL_COLOR: 'rgba(255, 255, 255, 0.3)',
     LGTM_STROKE_COLOR: 'rgba(0, 0, 0, 0.5)',
     LGTM_LINE_WIDTH: 2,
-    POKEMON_API_URL: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon'
+    POKEMON_API_URL: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon',
+    BATCH_SIZE: 3,  // 一度に読み込む画像の数
+    LOAD_INTERVAL: 100  // バッチ間の遅延時間（ミリ秒）
 };
 
 // グローバル変数
 let pokemonList = [{ id: 25, name: "ピカチュウ" }];
 
+// ローディング表示
+const showLoading = () => {
+    const grid = document.getElementById('pokemon-grid');
+    grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>ポケモンを読み込んでいます...</p></div>';
+};
+
+// ローディング非表示
+const hideLoading = () => {
+    const grid = document.getElementById('pokemon-grid');
+    const loading = grid.querySelector('.loading');
+    if (loading) {
+        loading.remove();
+    }
+};
+
 // ポケモンデータの読み込み
 const loadPokemonData = () => {
+    showLoading();
+    
     const script = document.createElement('script');
     script.src = 'pokemon-data.js';
+    script.async = true;  // 非同期読み込み
+    
     script.onload = () => {
         if (typeof allPokemonList !== 'undefined') {
             pokemonList = allPokemonList;
         }
+        hideLoading();
         generateMultiplePokemon();
     };
+    
+    script.onerror = () => {
+        hideLoading();
+        const grid = document.getElementById('pokemon-grid');
+        grid.innerHTML = '<div class="loading"><p style="color: #e74c3c;">ポケモンデータの読み込みに失敗しました。<br>ページを再読み込みしてください。</p></div>';
+    };
+    
     document.head.appendChild(script);
 };
 
 // 初期化処理
 const init = () => {
+    // データ読み込み開始
     loadPokemonData();
-    
-    // フォールバック：少し遅延させてからポケモンを表示
-    setTimeout(() => {
-        if (document.getElementById('pokemon-grid').children.length === 0) {
-            generateMultiplePokemon();
-        }
-    }, CONFIG.LOAD_DELAY);
 };
 
-// ページ読み込み完了時に初期化
-window.addEventListener('load', init);
+// DOMContentLoadedで早期初期化（画像などの読み込み完了を待たない）
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    // すでにDOMContentLoadedが発火済みの場合
+    init();
+}
 
 // ランダムなポケモンを選択する
 const selectRandomPokemon = (count) => {
@@ -70,27 +98,60 @@ const createPokemonCardHTML = (pokemon, index) => {
     `;
 };
 
-// 複数のポケモンを生成・表示
+// 複数のポケモンを生成・表示（バッチ処理）
 function generateMultiplePokemon() {
     const grid = document.getElementById('pokemon-grid');
     grid.innerHTML = '';
     
     const selectedPokemon = selectRandomPokemon(CONFIG.POKEMON_COUNT);
     
+    // まず全てのカードを作成（画像なし）
     selectedPokemon.forEach((pokemon, index) => {
         const card = document.createElement('div');
         card.className = 'pokemon-card';
         card.innerHTML = createPokemonCardHTML(pokemon, index);
         grid.appendChild(card);
-        
-        drawPokemonImage(pokemon, `canvas-${index}`);
     });
+    
+    // バッチで画像を読み込む
+    loadImagesInBatches(selectedPokemon);
 }
+
+// バッチで画像を読み込む
+const loadImagesInBatches = (pokemonList) => {
+    let currentIndex = 0;
+    
+    const loadNextBatch = () => {
+        const endIndex = Math.min(currentIndex + CONFIG.BATCH_SIZE, pokemonList.length);
+        
+        for (let i = currentIndex; i < endIndex; i++) {
+            drawPokemonImage(pokemonList[i], `canvas-${i}`);
+        }
+        
+        currentIndex = endIndex;
+        
+        if (currentIndex < pokemonList.length) {
+            setTimeout(loadNextBatch, CONFIG.LOAD_INTERVAL);
+        }
+    };
+    
+    loadNextBatch();
+};
 
 // キャンバスにポケモン画像とLGTMテキストを描画
 const drawPokemonImage = (pokemon, canvasId) => {
     const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
+    
+    // プレースホルダー表示
+    ctx.fillStyle = '#f8f8f8';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ccc';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('読み込み中...', canvas.width / 2, canvas.height / 2);
     
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -122,14 +183,24 @@ const drawPokemonImage = (pokemon, canvasId) => {
         ctx.fillText(CONFIG.LGTM_TEXT, textX, textY);
     };
     
+    let retryCount = 0;
+    const maxRetries = 2;
+    
     img.onerror = () => {
-        // エラー時の表示
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#666';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('画像を読み込めませんでした', canvas.width / 2, canvas.height / 2);
+        if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(() => {
+                img.src = `${CONFIG.POKEMON_API_URL}/${pokemon.id}.png?retry=${retryCount}`;
+            }, 1000 * retryCount);  // リトライ間隔を増やす
+        } else {
+            // エラー時の表示
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('画像を読み込めませんでした', canvas.width / 2, canvas.height / 2);
+        }
     };
     
     img.src = `${CONFIG.POKEMON_API_URL}/${pokemon.id}.png`;
