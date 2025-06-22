@@ -26,14 +26,14 @@
             text-align: center;
             margin: 30px 0;
         }
-        .generation-buttons {
+        .generation-buttons, .type-buttons {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
         }
-        .generation-buttons button {
+        .generation-buttons button, .type-buttons button {
             background-color: #e0e0e0;
             color: #333;
             padding: 8px 16px;
@@ -41,7 +41,7 @@
             border: 2px solid transparent;
             transition: all 0.3s;
         }
-        .generation-buttons button:hover {
+        .generation-buttons button:hover, .type-buttons button:hover {
             background-color: #d0d0d0;
         }
         .generation-buttons button.active {
@@ -51,6 +51,18 @@
         }
         .generation-buttons button.active:hover {
             background-color: #45a049;
+        }
+        .type-buttons button.active {
+            color: white;
+            border-width: 3px;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        .filter-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
         }
         button {
             background-color: #4CAF50;
@@ -65,6 +77,44 @@
         button:hover {
             background-color: #45a049;
         }
+        /* タイプ別の色 */
+        .type-normal { background-color: #A8A878 !important; }
+        .type-fighting { background-color: #C03028 !important; }
+        .type-flying { background-color: #A890F0 !important; }
+        .type-poison { background-color: #A040A0 !important; }
+        .type-ground { background-color: #E0C068 !important; }
+        .type-rock { background-color: #B8A038 !important; }
+        .type-bug { background-color: #A8B820 !important; }
+        .type-ghost { background-color: #705898 !important; }
+        .type-steel { background-color: #B8B8D0 !important; }
+        .type-fire { background-color: #F08030 !important; }
+        .type-water { background-color: #6890F0 !important; }
+        .type-grass { background-color: #78C850 !important; }
+        .type-electric { background-color: #F8D030 !important; }
+        .type-psychic { background-color: #F85888 !important; }
+        .type-ice { background-color: #98D8D8 !important; }
+        .type-dragon { background-color: #7038F8 !important; }
+        .type-dark { background-color: #705848 !important; }
+        .type-fairy { background-color: #EE99AC !important; }
+        
+        .type-normal.active { border-color: #8a8a5c !important; }
+        .type-fighting.active { border-color: #9e2620 !important; }
+        .type-flying.active { border-color: #8a70d0 !important; }
+        .type-poison.active { border-color: #803080 !important; }
+        .type-ground.active { border-color: #b09850 !important; }
+        .type-rock.active { border-color: #908028 !important; }
+        .type-bug.active { border-color: #8a9820 !important; }
+        .type-ghost.active { border-color: #584878 !important; }
+        .type-steel.active { border-color: #9898b0 !important; }
+        .type-fire.active { border-color: #c06828 !important; }
+        .type-water.active { border-color: #5070c0 !important; }
+        .type-grass.active { border-color: #60a040 !important; }
+        .type-electric.active { border-color: #c0a020 !important; }
+        .type-psychic.active { border-color: #c04868 !important; }
+        .type-ice.active { border-color: #70b0b0 !important; }
+        .type-dragon.active { border-color: #5820c0 !important; }
+        .type-dark.active { border-color: #584838 !important; }
+        .type-fairy.active { border-color: #be7990 !important; }
         #pokemon-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -88,6 +138,20 @@
             font-weight: bold;
             margin: 10px 0 5px 0;
             font-size: 14px;
+        }
+        .pokemon-types {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        .type-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
         }
         .pokemon-card button {
             background-color: #2196F3;
@@ -132,22 +196,51 @@
     <div class="container">
         <h1>ポケモンLGTMジェネレーター</h1>
         <div class="button-container">
-            <div class="generation-buttons" id="generation-buttons">
-                <button onclick="filterByGeneration(0)" class="active">全て</button>
-                <button onclick="filterByGeneration(1)">第1世代</button>
-                <button onclick="filterByGeneration(2)">第2世代</button>
-                <button onclick="filterByGeneration(3)">第3世代</button>
-                <button onclick="filterByGeneration(4)">第4世代</button>
-                <div style="width: 100%;"></div>
-                <button onclick="filterByGeneration(5)">第5世代</button>
-                <button onclick="filterByGeneration(6)">第6世代</button>
-                <button onclick="filterByGeneration(7)">第7世代</button>
-                <button onclick="filterByGeneration(8)">第8世代</button>
-                <button onclick="filterByGeneration(9)">第9世代</button>
+            <div class="filter-section">
+                <h3>世代で絞り込み</h3>
+                <div class="generation-buttons" id="generation-buttons">
+                    <button onclick="filterByGeneration(0)" class="active">全て</button>
+                    <button onclick="filterByGeneration(1)">第1世代</button>
+                    <button onclick="filterByGeneration(2)">第2世代</button>
+                    <button onclick="filterByGeneration(3)">第3世代</button>
+                    <button onclick="filterByGeneration(4)">第4世代</button>
+                    <div style="width: 100%;"></div>
+                    <button onclick="filterByGeneration(5)">第5世代</button>
+                    <button onclick="filterByGeneration(6)">第6世代</button>
+                    <button onclick="filterByGeneration(7)">第7世代</button>
+                    <button onclick="filterByGeneration(8)">第8世代</button>
+                    <button onclick="filterByGeneration(9)">第9世代</button>
+                </div>
+            </div>
+            <div class="filter-section">
+                <h3>タイプで絞り込み</h3>
+                <div class="type-buttons" id="type-buttons">
+                    <button onclick="toggleTypeFilter('all')" class="active">全て</button>
+                    <button onclick="toggleTypeFilter('normal')" class="type-normal">ノーマル</button>
+                    <button onclick="toggleTypeFilter('fighting')" class="type-fighting">かくとう</button>
+                    <button onclick="toggleTypeFilter('flying')" class="type-flying">ひこう</button>
+                    <button onclick="toggleTypeFilter('poison')" class="type-poison">どく</button>
+                    <button onclick="toggleTypeFilter('ground')" class="type-ground">じめん</button>
+                    <button onclick="toggleTypeFilter('rock')" class="type-rock">いわ</button>
+                    <button onclick="toggleTypeFilter('bug')" class="type-bug">むし</button>
+                    <button onclick="toggleTypeFilter('ghost')" class="type-ghost">ゴースト</button>
+                    <button onclick="toggleTypeFilter('steel')" class="type-steel">はがね</button>
+                    <div style="width: 100%;"></div>
+                    <button onclick="toggleTypeFilter('fire')" class="type-fire">ほのお</button>
+                    <button onclick="toggleTypeFilter('water')" class="type-water">みず</button>
+                    <button onclick="toggleTypeFilter('grass')" class="type-grass">くさ</button>
+                    <button onclick="toggleTypeFilter('electric')" class="type-electric">でんき</button>
+                    <button onclick="toggleTypeFilter('psychic')" class="type-psychic">エスパー</button>
+                    <button onclick="toggleTypeFilter('ice')" class="type-ice">こおり</button>
+                    <button onclick="toggleTypeFilter('dragon')" class="type-dragon">ドラゴン</button>
+                    <button onclick="toggleTypeFilter('dark')" class="type-dark">あく</button>
+                    <button onclick="toggleTypeFilter('fairy')" class="type-fairy">フェアリー</button>
+                </div>
             </div>
         </div>
         <div id="pokemon-grid"></div>
     </div>
+    <script src="pokemon-data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
