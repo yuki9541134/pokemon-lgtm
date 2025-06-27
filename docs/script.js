@@ -113,7 +113,8 @@ const createPokemonCardHTML = (pokemon, index) => {
 
     return `
         <canvas id="canvas-${index}" width="${CONFIG.CANVAS_SIZE}" height="${CONFIG.CANVAS_SIZE}"
-                data-pokemon-id="${pokemon.id}" data-pokemon-name="${pokemon.name}"></canvas>
+                data-pokemon-id="${pokemon.id}" data-pokemon-name="${pokemon.name}"
+                data-pokemon-url="${pokemon.imageUrl || ''}"></canvas>
         <div class="pokemon-name">No.${pokemon.id} ${pokemon.name}</div>
         <div class="pokemon-types">${typesBadgesHTML}</div>
         <button onclick="copyPokemonImage(${index})">画像をコピー</button>
@@ -353,13 +354,22 @@ const createLGTMImage = async (originalCanvas) => {
 
 const copyPokemonImage = async (index) => {
     const originalCanvas = document.getElementById(`canvas-${index}`);
+    const pokemonUrl = originalCanvas.dataset.pokemonUrl;
     
     try {
-        const lgtmCanvas = await createLGTMImage(originalCanvas);
-        const blob = await new Promise(resolve => lgtmCanvas.toBlob(resolve));
-        const item = new ClipboardItem({ 'image/png': blob });
-        await navigator.clipboard.write([item]);
-        showCopyFeedback(index);
+        if (pokemonUrl) {
+            // Cloudinary URLがある場合はmarkdown形式でコピー
+            const markdownText = `![LGTM](${pokemonUrl})`;
+            await navigator.clipboard.writeText(markdownText);
+            showCopyFeedback(index);
+        } else {
+            // URLがない場合は画像をクリップボードにコピー
+            const lgtmCanvas = await createLGTMImage(originalCanvas);
+            const blob = await new Promise(resolve => lgtmCanvas.toBlob(resolve));
+            const item = new ClipboardItem({ 'image/png': blob });
+            await navigator.clipboard.write([item]);
+            showCopyFeedback(index);
+        }
     } catch (err) {
         console.error('クリップボードへのコピーに失敗しました:', err);
         alert('クリップボードへのコピーに失敗しました');
