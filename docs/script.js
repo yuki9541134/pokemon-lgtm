@@ -15,6 +15,8 @@ const CONFIG = {
 let pokemonList = [];
 let currentGeneration = 0;
 let selectedType = 'all';
+let viewMode = 'all'; // 'all' or 'favorites'
+let favoritePokemons = [];
 
 const GENERATION_RANGES = {
     1: { start: 1, end: 151 },      // カントー
@@ -37,10 +39,79 @@ const hideLoading = () => {
     if (loading) loading.remove();
 };
 
+// LocalStorageの管理
+const FAVORITE_STORAGE_KEY = 'favorite-pokemon';
+
+const loadFavorites = () => {
+    try {
+        const stored = localStorage.getItem(FAVORITE_STORAGE_KEY);
+        favoritePokemons = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        favoritePokemons = [];
+    }
+};
+
+const saveFavorites = () => {
+    try {
+        localStorage.setItem(FAVORITE_STORAGE_KEY, JSON.stringify(favoritePokemons));
+    } catch (e) {
+        console.error('Failed to save favorites:', e);
+    }
+};
+
+const toggleFavorite = (pokemonId) => {
+    const id = parseInt(pokemonId);
+    const index = favoritePokemons.indexOf(id);
+    
+    if (index > -1) {
+        favoritePokemons.splice(index, 1);
+    } else {
+        favoritePokemons.push(id);
+    }
+    
+    saveFavorites();
+    updateFavoriteButton(pokemonId);
+};
+
+const isFavorite = (pokemonId) => {
+    return favoritePokemons.includes(parseInt(pokemonId));
+};
+
+const updateFavoriteButton = (pokemonId) => {
+    const button = document.querySelector(`button[data-pokemon-id="${pokemonId}"]`);
+    if (button) {
+        if (isFavorite(pokemonId)) {
+            button.classList.add('favorited');
+            button.innerHTML = '<span style="text-shadow: none;">★</span>';
+        } else {
+            button.classList.remove('favorited');
+            button.innerHTML = '<span style="text-shadow: 0 0 0.5px #000;">☆</span>';
+        }
+    }
+};
+
+const setViewMode = (mode) => {
+    viewMode = mode;
+    
+    // タブのアクティブ状態を更新
+    document.querySelectorAll('.view-tabs button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    if (mode === 'all') {
+        document.querySelector('.view-tabs button[onclick*="\'all\'"]').classList.add('active');
+    } else {
+        document.querySelector('.view-tabs button[onclick*="\'favorites\'"]').classList.add('active');
+    }
+    
+    generateMultiplePokemon();
+};
+
 const loadPokemonData = () => {
     showLoading();
     if (typeof allPokemonList !== 'undefined') {
         pokemonList = allPokemonList;
+        loadFavorites();
         hideLoading();
         generateMultiplePokemon();
     } else {
@@ -57,6 +128,11 @@ if (document.readyState === 'loading') {
 // 世代とタイプでフィルタリングされたポケモンリストを取得
 const getFilteredPokemonList = () => {
     let filteredList = pokemonList;
+    
+    // お気に入りモードの場合
+    if (viewMode === 'favorites') {
+        filteredList = filteredList.filter(pokemon => favoritePokemons.includes(pokemon.id));
+    }
     
     // 世代でフィルタリング
     if (currentGeneration !== 0) {
@@ -111,13 +187,24 @@ const createPokemonCardHTML = (pokemon, index) => {
         return `<span class="type-badge" style="background-color: ${typeColor};">${typeName}</span>`;
     }).join('');
 
+    const isFav = isFavorite(pokemon.id);
+    const favoriteButtonClass = isFav ? 'favorited' : '';
+    const favoriteButtonContent = isFav 
+        ? '<span style="text-shadow: none;">★</span>' 
+        : '<span style="text-shadow: 0 0 0.5px #000;">☆</span>';
+
     return `
         <canvas id="canvas-${index}" width="${CONFIG.CANVAS_SIZE}" height="${CONFIG.CANVAS_SIZE}"
                 data-pokemon-id="${pokemon.id}" data-pokemon-name="${pokemon.name}"
                 data-pokemon-url="${pokemon.imageUrl || ''}"></canvas>
         <div class="pokemon-name">No.${pokemon.id} ${pokemon.name}</div>
         <div class="pokemon-types">${typesBadgesHTML}</div>
-        <button onclick="copyPokemonImage(${index})">画像をコピー</button>
+        <div class="button-group">
+            <button class="favorite-button ${favoriteButtonClass}" 
+                    data-pokemon-id="${pokemon.id}"
+                    onclick="toggleFavorite(${pokemon.id})">${favoriteButtonContent}</button>
+            <button onclick="copyPokemonImage(${index})">画像をコピー</button>
+        </div>
         <div class="copy-feedback" id="feedback-${index}">コピーしました！</div>
     `;
 };
@@ -128,6 +215,17 @@ function generateMultiplePokemon() {
     grid.innerHTML = '';
     
     const selectedPokemon = selectRandomPokemon(CONFIG.POKEMON_COUNT);
+    
+    // お気に入りモードで表示するポケモンがない場合
+    if (viewMode === 'favorites' && selectedPokemon.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #666;">
+                <p style="font-size: 18px; margin-bottom: 10px;">お気に入りのポケモンがありません</p>
+                <p style="font-size: 14px;">星マークをクリックしてポケモンをお気に入りに追加してください</p>
+            </div>
+        `;
+        return;
+    }
     
     selectedPokemon.forEach((pokemon, index) => {
         const card = document.createElement('div');

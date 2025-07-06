@@ -190,12 +190,74 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* お気に入りタブのスタイル */
+        .view-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .view-tabs button {
+            background-color: #e0e0e0;
+            color: #666;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .view-tabs button:hover {
+            background-color: #d0d0d0;
+        }
+        .view-tabs button.active {
+            background-color: #FF6B6B;
+            color: white;
+        }
+        /* お気に入りボタンのスタイル */
+        .favorite-button {
+            background-color: white !important;
+            border: 2px solid #e0e0e0 !important;
+            padding: 5px 10px !important;
+            cursor: pointer;
+            font-size: 28px;
+            color: #999;
+            transition: all 0.3s;
+            margin: 5px 0;
+            border-radius: 5px;
+            min-width: 45px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .favorite-button:hover {
+            color: #FFA500 !important;
+            background-color: #fff5e6 !important;
+            border-color: #FFA500 !important;
+            box-shadow: 0 2px 5px rgba(255,165,0,0.3);
+        }
+        .favorite-button.favorited {
+            color: #FFD700;
+            background-color: #FFF8DC !important;
+            border-color: #FFD700 !important;
+            box-shadow: 0 2px 5px rgba(255,215,0,0.3);
+            text-shadow: 0 0 3px rgba(255,215,0,0.5);
+        }
+        .pokemon-card .button-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>ポケモンLGTMジェネレーター</h1>
         <div class="button-container">
+            <div class="view-tabs">
+                <button onclick="setViewMode('all')" class="active">全て表示</button>
+                <button onclick="setViewMode('favorites')">お気に入り</button>
+            </div>
             <div class="filter-section">
                 <h3>世代で絞り込み</h3>
                 <div class="generation-buttons" id="generation-buttons">
